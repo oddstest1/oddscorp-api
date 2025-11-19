@@ -1,0 +1,1802 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ODDSCORP.COM: API for bookmaker sure bets, value bets and information about LIVE and PREMATCH sports events",
+    "description": "<a href=\"http://oddscorp.com\">ODDSCORP.COM</a> - API for receiving bookmaker sure bets, value bets and information about LIVE and PREMATCH sports events from various bookmakers and exchanges:<br>\nbet365, 1xbet, fonbet, betcity, betfair, bingoboom (betboom), bookmaker, winline, stake, pinnacle, parimatch, olimp, marathon, ligastavok, 188bet and others. <br><br>\nThe list of all available bookmakers can be viewed at <a href=\"https://docs.google.com/spreadsheets/d/1LFDmgJr0qpDwYo2gpjQXPyRz6TGNaY0-O9cIOWwCHqE/edit?usp=sharing\">this link</a>. Upon request we are ready to add other bookmakers.<br><br>\nIn our bookmaker API for betting, you will find information on sports events from 65+ bookmakers. You will be able to use the API data to make value bets and arbitrage bets.<br><br>\nContact support (telegram: <a href =\"https://t.me/oddscorp\">@oddscorp</a>) and you will be provided with a trial period to receive bookmaker sure bets, value bets, updating odds in live and prematch via API.\n<br><br>\n<a href=\"https://t.me/+C1owllhgJXBlZGVi\">Our telegram channel with useful information </a>",
+    "version": "0.1.1"
+  },
+  "servers": [
+    {
+      "url": "http://api.oddscp.com:8111"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sport",
+      "x-displayName": "Sport",
+      "description": "<SchemaDefinition schemaRef=\"#/components/schemas/Sport\" />"
+    },
+    {
+      "name": "Bookmaker",
+      "x-displayName": "Bookmaker",
+      "description": "<SchemaDefinition schemaRef=\"#/components/schemas/Bookmaker\" />"
+    },
+    {
+      "name": "BetType",
+      "x-displayName": "BetType",
+      "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BetType\" />"
+    },
+    {
+      "name": "sure bet",
+      "x-displayName": "sure bet",
+      "description": "<SchemaDefinition schemaRef=\"#/components/schemas/sure bet\" />"
+    },
+    {
+      "name": "Event",
+      "x-displayName": "Event",
+      "description": "Event at a specific bookmaker\n<SchemaDefinition schemaRef=\"#/components/schemas/Event\" />\n"
+    },
+    {
+      "name": "Market",
+      "x-displayName": "Market",
+      "description": "<SchemaDefinition schemaRef=\"#/components/schemas/Market\" />"
+    }
+  ],
+  "x-tagGroups": [
+    {
+      "name": "Main",
+      "tags": [
+        "PREMATCH / LIVE - Sure bets",
+        "PREMATCH / LIVE - Events",
+        "WebSocket [Odds Updates]",
+        "PREMATCH / LIVE - Value bets",
+        "Auxiliary"
+      ]
+    },
+    {
+      "name": "Models",
+      "tags": [
+        "Sport",
+        "Bookmaker",
+        "BetType",
+        "sure bet",
+        "Event",
+        "Market"
+      ]
+    }
+  ],
+  "paths": {
+    "/valuebets": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Value bets"
+        ],
+        "description": "Returns a list of value bets according to specified parameters<br><br>__Request example&#58;__ <i>http&#58;//api.oddscp.com&#58;8111/valuebets?bk_name=fonbet&alive_sec=2&get_market_data=2&token=gd7a8fdggrtfg34b6c </i> <br><br>__For calculations it is necessary to use data only from \"valuing_data\".__<br><details><summary>**<i>Examples and description of score formation (expand):</i>**</summary><p><br>**H** - half<br>**G** - game<br>**M** - map (esports)<br>**R** - round<br>**T** - period<br>**S** - set<br>**P** - period<br>**I** - inning (baseball)<br>**Q** - quarter<br><br>**OT** - overtime<br>**B** - break<br>__*__ - whose serve (Badminton, Volleyball)<br><br><br>**Examples:**<br>**1:0 (6:3)|T2,B**<br><br>**B** - means break before 2nd period;<br><br>———<br>**1:0 (6:3 0:0)|S2,B**<br><br>**\"1:0\"** - current score;<br>**\"6:3\"** - in the first set;<br>**\"0:0\"** - this is the score in the second set;<br>**S2,B** - now break before the second set;<br><br>———<br>**1:1 (0:1 1:0) 68`**<br><br>**\"68\"** - minutes of play from the start of the match;<br>**\"1:1\"** - current score;<br>**\"(0:1 1:0)\"** - second half is going on. In the first half the 2nd team scored, and in the second half the 1st team scored;</p></details><details><summary>**<i>Description of meta components (expand):</i>**</summary><p><br>Meta can change depending on sport and bookmaker! Be careful!<br>We usually don't remove old data, only add new. We always try to inform about changes through our official telegram channel.<br>Something from meta may not be current or if you have any questions, please clarify with tech support.<br><br>We can add something new to meta if you need it. There is a 250 character limit in meta, but we will try to fit it.<br><br>———<br>**Pinnacle**<br>**\"key\":\"s;0;s;0.25** - this is marketKey, specifically this one - handicap in play 0.25<br>**\"dest\"** - can be \"null\" if the outcome doesn't have this field<br>**\"dest\\\":\\\"under\\\"** - new key for TU (TotalUnder)<br>**\"dest\\\":\\\"over\\\"** - new key for TO (TotalOver)<br>**\"points\"** - for handicaps and totals with original value from API, i.e. without considering sign and score for handicaps. For other bet types, the 'points' field is not added to meta.<br><br>**\"homeTeamType\"** - Team1 / Team2. Team order, which team is meant as home. <br>  - if homeTeamType=TEAM1, then the team order on pinnacle is the same as we indicate<br>  - if homeTeamType=TEAM2, then the team order on pinnacle is reversed, and the second team should be indicated first<br><br>**\"team\"** - TEAM1 / TEAM2. In our sure bet/value data you need to follow this parameter.<br>  - if team=TEAM1 and we see P2, then the bet needs to be changed (P2 to P1)<br>  - if team=TEAM2 and we see P1, then also need to change (P1 to P2)<br>  - if team is empty (this can be for some sports), then do nothing<br><br>**homeTeamType and team are important parameters**, because some events on pinnacle have reversed team order. More details with examples can be found at <a href=\"https://docs.google.com/document/d/1iGGdBPh6odk88EjkGDujPLNqiYpr9Mn6TXhxOJ_1OEc/edit?usp=sharing\">this link</a>.<br><br>———<br>**Parimatch(parimatch_com)**<br>Abbreviated parameter names in meta:<br>\"resultKind\\\":\\\"rK\\\"<br>\"outcomeType\\\":\\\"oT\\\"<br>\"period\\\":\\\"p\\\"<br>\"subPeriod\\\":\\\"sP\\\"<br>\"marketType\\\":\\\"mT\\\"<br>\"marketParameters\\\":\\\"mP\\\"<br>\"outcomeParameters\\\":\\\"oP\\\"<br>\"market_name\\\":\\\"mN\\\"<br>\"outcome_name\\\":\\\"oN\\\"<br>\"lineItemId\\\":\\\"lIId\\\"<br><br>———<br>**Fonbet:**<br>**live_delay** - variable directly from fonbet \"internals\". You can ignore it.<br>The higher the live_delay, the longer the bet will be accepted. There are bets that are accepted instantly - they have live_delay=0 or 1.<br>Standard is 3-4, but there are matches where it's 5-6.<br><br>———<br>**Unibet**<br>**boId** - this is bet group id<br>**id** - this is directly bet id<br>**event_id** -  eId<br><br>———<br>**Efbet**<br>**pu** - currentpriceup<br>**pd** - currentpricedown<br>**shc** - selectionhashcode<br>**m**n - marketname<br>**im** - idfomarket<br>**et** - eachwayterms<br>**prt** - pricetypes (everywhere)<br>**hv** - hadvalue (not set everywhere, so to not lose it we made it null if missing). HV - not always, actually it's Home/Away/Draw value, exists in some bets but not all. Mostly where it's critical for their internal bet identification.<br><br>At event level, a key is added to meta orig_name - event name as it is on efbet API.<br><br>———<br>**1xbet family (melbet/1xstavka)**<br>**NB** - nameBet/name_bet<br>**NG** - nameGroup/name_group<br>**C** - Price<br>**G** - Bet group id<br>**P** - bet identifier, used in handicaps/totals<br>**T** - bet identifier<br>**SSI** - SubsportID<br>**GN** - gameNum<br>**ei** - event_id<br>**gi** - game_id<br><br>———<br>**888**<br>**s_name** - sport name on site<br><br>———<br>**bet365**<br>**visible_ru** - false/true, \"visibility\" flag. Information about match \"visibility\" from RF version of site. This is determined by several criteria, they are not on the surface.<br>**true** - match is visible<br>**false** - match is unavailable for RF version.<br>Information is available in meta-data for the event itself<br><br>———<br>**eurobet**<br>**betGroup** - top group<br>**oggGroup** - what's inside the block<br>**odd** - third level text<br>**resultCode** - button id, they go in order there, there's no such thing in html, but with this meta you can generally find the bet without much problem<br></p></details><br>",
+        "summary": "Get list of value bets",
+        "operationId": "getValueBets",
+        "parameters": [
+          {
+            "name": "live",
+            "description": "Getting **PREMATCH value bets**. Specify \"**&live=0**\" to get prematch value bets. By default LIVE value bets are requested, i.e. for LIVE value bets this parameter doesn't need to be specified.",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            },
+            "example": 0
+          },
+          {
+            "name": "bet_types",
+            "description": "Bet type in value bet<br> Current list of bet types with detailed description is at this link - <a href=\"http://api.oddscp.com:8111/static/possible_bets_list.txt\">http://api.oddscp.com:8111/static/possible_bets_list.txt</a>",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "example": "HALF_WIN,WIN",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/BetType"
+              }
+            }
+          },
+          {
+            "name": "sport",
+            "description": "Sport",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "example": "tennis,soccer",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "event_id",
+            "description": "Getting value bets only for specified event id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": 181993
+          },
+          {
+            "name": "bk_name",
+            "description": "List of bookmakers on which we search for value bets",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "example": "fonbet,olimp,bet365",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "min_cf",
+            "description": "Minimum odds",
+            "in": "query",
+            "example": 1.1,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "max_cf",
+            "description": "Maximum odds",
+            "in": "query",
+            "example": 3.5,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "min_fi",
+            "description": "Minimum value bet %",
+            "in": "query",
+            "example": -1,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "max_fi",
+            "description": "Maximum value bet %",
+            "in": "query",
+            "example": 10,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "alive_sec",
+            "description": "Minimum time of value bet existence for specified percentage (-1%)",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "name": "alive_prc",
+            "description": "Value bet percentage relative to which alive_sec is calculated",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": -1,
+              "enum": [
+                -1,
+                0,
+                0.5,
+                1,
+                1.5,
+                2,
+                2.5,
+                3
+              ]
+            }
+          },
+          {
+            "name": "get_market_data",
+            "description": "Enable display of value calculations. valuing_data will appear including, with __\"1\"__ - odds at other bookmakers, value calculations. __\"2\"__ - odds at other bookmakers, value calculations, score at other bookmakers and last odds change time.<br> For sports soccer, table-tennis, tennis, volleyball - mandatory score check is enabled. Calculations only include bookmakers whose score matches the main bookmaker. For other sports there is no mandatory score check. <details><summary><strong>Description of valuing_data values&#58; (expand)</strong></summary><p><br><strong>need_cfs</strong> - array of odds participating in calculations below<br><br><strong>cf_orig</strong> - this is the original odds (for the same bet we set in url)<br><strong>cf_mdn</strong> - median odds across all bookmakers including requested<br><strong>cf_avg</strong> - average odds (arithmetic mean)<br><strong>cf_avg2 and cf_mdn2</strong> - this is test data, you can skip it<br><strong>diff_avg</strong> - this is difference cf_avg - cf_orig (in % of course)<br><strong>diff_mdn</strong> - difference cf_mdn - cf_orig<br><strong>min_max_dst</strong> - this is difference in % between min and max odds across all bookmakers<br><strong>total_cnt</strong> - number of odds<br><strong>total_pos</strong> - this is position of requested odds on line of sorted odds (if our odds is best, then value will be 1.0, and if worst, then 0.0)<br><strong>better_cnt</strong> - number of odds that are >= current<br><strong>aw_avg</strong> - conversion with margin (aw = <probability conversion> - <margin>). Arithmetic mean.<br><strong>aw_mdn</strong> - conversion with margin (aw = <probability conversion> - <margin>). Median.<br><strong>ow_avg</strong> - expected ROI (ow = <probability conversion>\\*2 - <margin>) Arithmetic mean.<br><strong>ow_mdn</strong> - expected ROI (ow = <probability conversion>\\*2 - <margin>). Median.<br><strong>min_aw</strong> - conversion with margin (aw = <conversion> - <margin>). Minimum.<br><strong>min_ow</strong> - expected ROI (ow = <conversion>\\*2 - <margin>). Minimum.<br><strong>min_diff</strong> - this is difference cf_(minimum) - cf_orig<br><strong>ow2_avg</strong> - calculation is based on conversion of winning sizes - by formula (CF2 - CF1)/CF1. Arithmetic mean.<br><strong>ow2_mdn</strong> - calculation is based on conversion of winning sizes - by formula (CF2 - CF1)/CF1. Median.<br><br><strong>Probability conversion</strong> - calculated by formula (1/CF1 - 1/CF2)<br><br><strong>Inside valuing_data.cfs array the following data for each bookmaker&#58;</strong><br>- Current odds<br>- How many seconds ago odds changed<br>- Current score in match<br>- Margin. Here's simple margin calculation formula&#58; <a href=\"http&#58;//prnt.sc/id-rNccQSMxl\">http&#58;//prnt.sc/id-rNccQSMxl</a> </p></details><br>",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 2,
+              "enum": [
+                1,
+                2
+              ]
+            },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns valuebets array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Value"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    },
+    "/values/get_market_data/{BK1_event_id}/{BK1_bet}": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Value bets"
+        ],
+        "summary": "Get value bet details",
+        "description": "Request to get detailed information about individual value bet (by event ID at bookmaker and bet). You will see - odds at other bookmakers, value calculations, score at other bookmakers and last odds change time.<br><br>\n**This type of clarifying request is only available for additional fee!!! Please clarify details with support.**\n<br><br>\n**Example clarifying request for live value bet:** http://api.oddscp.com:8111/values/get_market_data/BT3SCDD314B746FF/WIN__P1?&token=afdjd8fd8rjkfu7fa7f3 <br><br>**Example clarifying request for prematch value bet:** http://api.oddscp.com:8111/values/get_market_data/BT3SCDD314B746FF/WIN__P1?&token=afdjd8fd8rjkfu7fa7f3&live=0 (note parameter **live=0**)<br><br>**<a href=\"https://oddscorp.gitbook.io/websocket-en/additional/available-bookmakers\"><i>&#9654; List of all bookmakers and their abbreviations in \"CFS\" parameter (open)</i></a>**<details><summary><strong><i>Description of values in value calculations (expand):</i></strong></summary><p><br><strong>need_cfs</strong> - array of odds participating in calculations below<br><br><strong>cf_orig</strong> - this is desired odds (for same bet we passed in url)<br><strong>cf_mdn</strong> - median odds across all bookmakers including requested<br><strong>cf_avg</strong> - average odds (arithmetic mean)<br><strong>cf_avg2 and cf_mdn2</strong> - this is test data, you can skip<br><strong>diff_avg</strong> - this is difference cf_avg - cf_orig (in % of course)<br><strong>diff_mdn</strong> - difference cf_mdn - cf_orig<br><strong>min_max_dst</strong> - this is difference in % between min and max odds across all bookmakers<br><strong>total_cnt</strong> - number of odds<br><strong>total_pos</strong> - this is position of requested odds on line of sorted odds (if our odds is best, then value will be 1.0, and if worst, then 0.0)<br><strong>better_cnt</strong> - number of odds that are >= current<br><strong>aw_avg</strong> - conversion with margin (aw = <probability conversion> - <margin>). Arithmetic mean.<br><strong>aw_mdn</strong> - conversion with margin (aw = <probability conversion> - <margin>). Median.<br><strong>ow_avg</strong> - expected ROI (ow = <probability conversion>\\*2 - <margin>) Arithmetic mean.<br><strong>ow_mdn</strong> - expected ROI (ow = <probability conversion>\\*2 - <margin>). Median.<br><strong>min_aw</strong> - conversion with margin (aw = <conversion> - <margin>). Minimum.<br><strong>min_ow</strong> - expected ROI (ow = <conversion>\\*2 - <margin>). Minimum.<br><strong>min_diff</strong> - this is difference cf_(minimum) - cf_orig<br><strong>ow2_avg</strong> - calculation based on conversion of winning sizes - by formula (CF2 - CF1)/CF1. Arithmetic mean.<br><strong>ow2_mdn</strong> - calculation based on conversion of winning sizes - by formula (CF2 - CF1)/CF1. Median.<br><br><strong>Probability conversion</strong> - calculated by formula (1/CF1 - 1/CF2)<br><br><strong>Inside valuing_data.cfs array following data for each bookmaker&#58;</strong><br>- Current odds<br>- How many seconds ago odds changed<br>- Current score in match<br>- Margin. Here's simple margin calculation formula&#58; <a href=\"http&#58;//prntscr.com/vmgtfj\">http&#58;//prntscr.com/vmgtfj</a> (<a href=\"https&#58;//www.championat.com/bets/article-3993207-chto-takoe-marzha-v-stavkah-na-sport-kak-rasschitat-stavki-marzha-bukmekera-primer-onlajn.html#&#58;~&#58;text=%D0%9C%D0%B0%D1%80%D0%B6%D0%B0%20%D0%B2%20%D0%B1%D1%83%D0%BA%D0%BC%D0%B5%D0%BA%D0%B5%D1%80%D1%81%D0%BA%D0%BE%D0%B9%20%D0%BA%D0%BE%D0%BD%D1%82%D0%BE%D1%80%D0%B5%20%E2%80%94%20%D0%BA%D0%BE%D0%BC%D0%B8%D1%81%D1%81%D0%B8%D1%8F,%D0%BF%D1%80%D0%B8%20%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0%D1%85%20%D0%BD%D0%B0%20%D1%80%D0%B0%D0%B2%D0%BD%D0%BE%D0%B2%D0%B5%D1%80%D0%BE%D1%8F%D1%82%D0%BD%D1%8B%D0%B5%20%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8B.\">source</a>)</p></details><details><summary>**<i>Examples and description of score formation (expand):</i>**</summary><p><br>**H** - half<br>**G** - game<br>**M** - map (esports)<br>**R** - round<br>**T** - period<br>**S** - set<br>**P** - period<br>**I** - inning (baseball)<br>**Q** - quarter<br><br>**OT** - overtime<br>**B** - break<br>__*__ - whose serve (Badminton, Volleyball)<br><br><br>**Examples:**<br>**1:0 (6:3)|T2,B**<br><br>**B** - means break before 2nd period;<br><br>———<br>**1:0 (6:3 0:0)|S2,B**<br><br>**\"1:0\"** - current score;<br>**\"6:3\"** - in first set;<br>**\"0:0\"** - this is score in second set;<br>**S2,B** - now break before second set;<br><br>———<br>**1:1 (0:1 1:0) 68`**<br><br>**\"68\"** - minutes of play from start of match;<br>**\"1:1\"** - current score;<br>**\"(0:1 1:0)\"** - second half going on. In first half 2nd team scored, and in second half 1st team scored;</p></details>",
+        "operationId": "getValuebet",
+        "parameters": [
+          {
+            "name": "BK1_event_id",
+            "description": "Event identifier at bookmaker",
+            "required": true,
+            "in": "path",
+            "example": "BT3SCDD314B746FF",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "BK1_bet",
+            "description": "Bet at bookmaker",
+            "required": true,
+            "in": "path",
+            "example": "WIN__P1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sf",
+            "description": "Enable score check between bookmakers, i.e. exclusion from value calculations of bookmakers that haven't updated score yet. By default for value bets score check is enabled to avoid erroneous value bets due to data update delay at bookmakers. Specify \"**&sf=1**\" to use in calculations only bookmakers with correct score.",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 0,
+              "enum": [
+                0,
+                1
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns calculations for value bet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValueData"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "description": "Value bet not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    },
+    "/koef": {
+      "get": {
+        "tags": [
+          "WebSocket [Odds Updates]"
+        ],
+        "summary": "Getting and updating odds",
+        "description": "__WebSocket documentation available at - <a href=\"https://oddscorp.gitbook.io/websocket-en/\">https://oddscorp.gitbook.io/websocket-en/</a>__<br><br>",
+        "operationId": "getKoef",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sports": {
+      "get": {
+        "tags": [
+          "Auxiliary"
+        ],
+        "summary": "Sports types",
+        "description": "Returns list of available sports with description",
+        "operationId": "getSports",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sport"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/bookmakers": {
+      "get": {
+        "tags": [
+          "Auxiliary"
+        ],
+        "summary": "Bookmakers",
+        "description": "Returns list of available bookmakers with description. The list will include\nonly those bookmakers that were requested/paid for in your tariff.",
+        "operationId": "getBookmakers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bookmaker"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/forks": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Sure bets"
+        ],
+        "description": "Returns list of PREMATCH / LIVE sure bets according to specified parameters<br><br>__Request example&#58;__ <i>http&#58;//api.oddscp.com&#58;8111/forks?bk2_name=pinnacle,bet365,fonbet&min_fi=1&token=afdjd8fd8rjkfu7fa7f3 </i> <br><details><summary>**<i>Examples and description of score formation (expand):</i>**</summary><p><br>**H** - half<br>**G** - game<br>**M** - map (esports)<br>**R** - round<br>**T** - period<br>**S** - set<br>**P** - period<br>**I** - inning (baseball)<br>**Q** - quarter<br><br>**OT** - overtime<br>**B** - break<br>__*__ - whose serve (Badminton, Volleyball)<br><br><br>**Examples:**<br>**1:0 (6:3)|T2,B**<br><br>**B** - means break before 2nd period;<br><br>———<br>**1:0 (6:3 0:0)|S2,B**<br><br>**\"1:0\"** - current score;<br>**\"6:3\"** - in first set;<br>**\"0:0\"** - this is score in second set;<br>**S2,B** - now break before second set;<br><br>———<br>**1:1 (0:1 1:0) 68`**<br><br>**\"68\"** - minutes of play from start of match;<br>**\"1:1\"** - current score;<br>**\"(0:1 1:0)\"** - second half going on. In first half 2nd team scored, and in second half 1st team scored;</p></details><details><summary>**<i>Description of meta components (expand):</i>**</summary><p><br>Meta can change depending on sport and bookmaker! Be careful!<br>We usually don't remove old data, only add new. We always try to inform about changes through our official telegram channel.<br>Something from meta may not be current or if you have any questions, please clarify with tech support.<br><br>We can add something new to meta if you need it. There is a 250 character limit in meta, but we will try to fit it.<br><br>———<br>**Pinnacle**<br>**\"key\":\"s;0;s;0.25** - this is marketKey, specifically this one - handicap in play 0.25<br>**\"dest\"** - can be \"null\" if the outcome doesn't have this field<br>**\"dest\\\":\\\"under\\\"** - new key for TU (TotalUnder)<br>**\"dest\\\":\\\"over\\\"** - new key for TO (TotalOver)<br>**\"points\"** - for handicaps and totals with original value from API, i.e. without considering sign and score for handicaps. For other bet types, the 'points' field is not added to meta.<br><br>**\"homeTeamType\"** - Team1 / Team2. Team order, which team is meant as home. <br>  - if homeTeamType=TEAM1, then the team order on pinnacle is the same as we indicate<br>  - if homeTeamType=TEAM2, then the team order on pinnacle is reversed, and the second team should be indicated first<br><br>**\"team\"** - TEAM1 / TEAM2. In our sure bet/value data you need to follow this parameter.<br>  - if team=TEAM1 and we see P2, then the bet needs to be changed (P2 to P1)<br>  - if team=TEAM2 and we see P1, then also need to change (P1 to P2)<br>  - if team is empty (this can be for some sports), then do nothing<br><br>**homeTeamType and team are important parameters**, because some events on pinnacle have reversed team order. More details with examples can be found at <a href=\"https://docs.google.com/document/d/1iGGdBPh6odk88EjkGDujPLNqiYpr9Mn6TXhxOJ_1OEc/edit?usp=sharing\">this link</a>.<br><br>———<br>**Parimatch(parimatch_com)**<br>Abbreviated parameter names in meta:<br>\"resultKind\\\":\\\"rK\\\"<br>\"outcomeType\\\":\\\"oT\\\"<br>\"period\\\":\\\"p\\\"<br>\"subPeriod\\\":\\\"sP\\\"<br>\"marketType\\\":\\\"mT\\\"<br>\"marketParameters\\\":\\\"mP\\\"<br>\"outcomeParameters\\\":\\\"oP\\\"<br>\"market_name\\\":\\\"mN\\\"<br>\"outcome_name\\\":\\\"oN\\\"<br>\"lineItemId\\\":\\\"lIId\\\"<br><br>———<br>**Fonbet:**<br>**live_delay** - variable directly from fonbet \"internals\". You can ignore it.<br>The higher the live_delay, the longer the bet will be accepted. There are bets that are accepted instantly - they have live_delay=0 or 1.<br>Standard is 3-4, but there are matches where it's 5-6.<br><br>———<br>**Unibet**<br>**boId** - this is bet group id<br>**id** - this is directly bet id<br>**event_id** -  eId<br><br>———<br>**Efbet**<br>**pu** - currentpriceup<br>**pd** - currentpricedown<br>**shc** - selectionhashcode<br>**m**n - marketname<br>**im** - idfomarket<br>**et** - eachwayterms<br>**prt** - pricetypes (everywhere)<br>**hv** - hadvalue (not set everywhere, so to not lose it we made it null if missing). HV - not always, actually it's Home/Away/Draw value, exists in some bets but not all. Mostly where it's critical for their internal bet identification.<br><br>At event level, a key is added to meta orig_name - event name as it is on efbet API.<br><br>———<br>**1xbet family (melbet/1xstavka)**<br>**NB** - nameBet/name_bet<br>**NG** - nameGroup/name_group<br>**C** - Price<br>**G** - Bet group id<br>**P** - bet identifier, used in handicaps/totals<br>**T** - bet identifier<br>**SSI** - SubsportID<br>**GN** - gameNum<br>**ei** - event_id<br>**gi** - game_id<br><br>———<br>**888**<br>**s_name** - sport name on site<br><br>———<br>**bet365**<br>**visible_ru** - false/true, \"visibility\" flag. Information about match \"visibility\" from RF version of site. This is determined by several criteria, they are not on the surface.<br>**true** - match is visible<br>**false** - match is unavailable for RF version.<br>Information is available in meta-data for the event itself<br><br>———<br>**eurobet**<br>**betGroup** - top group<br>**oggGroup** - what's inside the block<br>**odd** - third level text<br>**resultCode** - button id, they go in order there, there's no such thing in html, but with this meta you can generally find the bet without much problem<br></p></details><br>",
+        "summary": "Get list of PREMATCH / LIVE sure bets",
+        "operationId": "getsure bets",
+        "parameters": [
+          {
+            "name": "live",
+            "description": "Getting **PREMATCH sure bets**. Specify \"**&live=0**\" to get prematch sure bets. By default LIVE sure bets are requested, i.e. for LIVE sure bets this parameter doesn't need to be specified.",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            },
+            "example": 0
+          },
+          {
+            "name": "bet_types",
+            "description": "Bet type in sure bet.<br> Current list of bet types with detailed description is at this link - <a href=\"http://api.oddscp.com:8111/static/possible_bets_list.txt\">http://api.oddscp.com:8111/static/possible_bets_list.txt</a>",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "example": "HALF_WIN,WIN",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/BetType"
+              }
+            }
+          },
+          {
+            "name": "sport",
+            "description": "Sport",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "example": "tennis,soccer",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "event_id",
+            "description": "Getting sure bets only for specified event id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": 181993
+          },
+          {
+            "name": "bk2_name",
+            "description": "List of bookmakers participating in sure bet",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "example": "fonbet,olimp,bet365",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "bk_name",
+            "description": "Bookmaker that must participate in sure bet",
+            "in": "query",
+            "example": "fonbet",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "min_cf",
+            "description": "Minimum odds",
+            "in": "query",
+            "example": 1.1,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "max_cf",
+            "description": "Maximum odds",
+            "in": "query",
+            "example": 3.5,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "min_fi",
+            "description": "Minimum sure bet %",
+            "in": "query",
+            "example": -1,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "max_fi",
+            "description": "Maximum sure bet %",
+            "in": "query",
+            "example": 10,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "is_middles",
+            "description": "Middles in output. -1 - without middles. 0 - sure bets and middles.\n1 - only middles",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 0,
+              "enum": [
+                -1,
+                0,
+                1
+              ]
+            }
+          },
+          {
+            "name": "alive_sec",
+            "description": "Minimum time of sure bet existence for specified percentage (-1%)",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "name": "alive_prc",
+            "description": "sure bet percentage relative to which alive_sec is calculated",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": -1,
+              "enum": [
+                -1,
+                0,
+                0.5,
+                1,
+                1.5,
+                2,
+                2.5,
+                3
+              ]
+            }
+          },
+          {
+            "name": "get_cfs",
+            "description": "(Parameter available only for additional fee, clarify price with tech support). Outputs list of odds for current market on all bookmakers at given moment and outputs current score on sure bet match. In response will appear 3 keys - cfs1, cfs2, all_scores. <details> <summary>**<i>Usage methods (expand):</i>**</summary> <p><i>First of all, should be used to determine \"sure bet initiator\". In this case you should go through the entire list of bookmakers and calculate sure bets by standard formula (we will help with this if you don't have it) from the percentage you need.<br><br> Also, you should definitely consider \"mirrors\" - optimal option is to take the highest odds from all mirror offices. The list of mirrors itself can be obtained using data from /bookmakers method.<br><br> Besides determining the \"initiator\", this data can be used for deeper customization of your strategies, or simply put - filter the general flow of sure bets. How exactly? Here everything remains at the discretion of your own imagination and your experience.<br><br> Having the current score on the sure bet match for all bookmakers will allow you to analyze the current situation in more detail and be more confident in the bets you make.</i></p> </details>",
+            "in": "query",
+            "example": 1,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "score_filter",
+            "description": "Disable score check between bookmakers. By default for sure bets on soccer and hockey score check is enabled to avoid erroneous sure bets due to data update delay at bookmakers. For other sports this parameter doesn't work. Specify \"**&score_filter=0**\" to disable score check.",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            },
+            "example": 0
+          },
+          {
+            "name": "show_swap",
+            "description": "Show whether team order was reversed for each bookmaker in sure bet. In response will appear 2 keys - BK1_event_swapped and BK2_event_swapped. Specify \"**&show_swap=1**\" to enable display.",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns sure bet array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sure bet"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    },
+    "/forks/{fork_id}": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Sure bets"
+        ],
+        "summary": "Get sure bet details",
+        "description": "Request to get detailed information about individual sure bet (by its\nkey)<br><br>\n**Example request for prematch sure bet:** http://api.oddscp.com:8111/forks/13596cec090d11ac3b?live=0&token=afdjd8fd8rjkfu7fa7f3 (note parameter **live=0**) <br><br>**Example request for live sure bet:** http://api.oddscp.com:8111/forks/13596cec090d11ac3b?&token=afdjd8fd8rjkfu7fa7f3 <details><summary>**<i>Examples and description of score formation (expand):</i>**</summary><p><br>**H** - half<br>**G** - game<br>**M** - map (esports)<br>**R** - round<br>**T** - period<br>**S** - set<br>**P** - period<br>**I** - inning (baseball)<br>**Q** - quarter<br><br>**OT** - overtime<br>**B** - break<br>__*__ - whose serve (Badminton, Volleyball)<br><br><br>**Examples:**<br>**1:0 (6:3)|T2,B**<br><br>**B** - means break before 2nd period;<br><br>———<br>**1:0 (6:3 0:0)|S2,B**<br><br>**\"1:0\"** - current score;<br>**\"6:3\"** - in first set;<br>**\"0:0\"** - this is score in second set;<br>**S2,B** - now break before second set;<br><br>———<br>**1:1 (0:1 1:0) 68`**<br><br>**\"68\"** - minutes of play from start of match;<br>**\"1:1\"** - current score;<br>**\"(0:1 1:0)\"** - second half going on. In first half 2nd team scored, and in second half 1st team scored;</p></details><details><summary>**<i>Description of meta components (expand):</i>**</summary><p><br>Meta can change depending on sport and bookmaker! Be careful!<br>We usually don't remove old data, only add new. We always try to inform about changes through our official telegram channel.<br>Something from meta may not be current or if you have any questions, please clarify with tech support.<br><br>We can add something new to meta if you need it. There is a 250 character limit in meta, but we will try to fit it.<br><br>———<br>**Pinnacle**<br>**\"key\":\"s;0;s;0.25** - this is marketKey, specifically this one - handicap in play 0.25<br>**\"dest\"** - can be \"null\" if the outcome doesn't have this field<br>**\"dest\\\":\\\"under\\\"** - new key for TU (TotalUnder)<br>**\"dest\\\":\\\"over\\\"** - new key for TO (TotalOver)<br>**\"points\"** - for handicaps and totals with original value from API, i.e. without considering sign and score for handicaps. For other bet types, the 'points' field is not added to meta.<br><br>**\"homeTeamType\"** - Team1 / Team2. Team order, which team is meant as home. <br>  - if homeTeamType=TEAM1, then the team order on pinnacle is the same as we indicate<br>  - if homeTeamType=TEAM2, then the team order on pinnacle is reversed, and the second team should be indicated first<br><br>**\"team\"** - TEAM1 / TEAM2. In our sure bet/value data you need to follow this parameter.<br>  - if team=TEAM1 and we see P2, then the bet needs to be changed (P2 to P1)<br>  - if team=TEAM2 and we see P1, then also need to change (P1 to P2)<br>  - if team is empty (this can be for some sports), then do nothing<br><br>**homeTeamType and team are important parameters**, because some events on pinnacle have reversed team order. More details with examples can be found at <a href=\"https://docs.google.com/document/d/1iGGdBPh6odk88EjkGDujPLNqiYpr9Mn6TXhxOJ_1OEc/edit?usp=sharing\">this link</a>.<br><br>———<br>**Parimatch(parimatch_com)**<br>Abbreviated parameter names in meta:<br>\"resultKind\\\":\\\"rK\\\"<br>\"outcomeType\\\":\\\"oT\\\"<br>\"period\\\":\\\"p\\\"<br>\"subPeriod\\\":\\\"sP\\\"<br>\"marketType\\\":\\\"mT\\\"<br>\"marketParameters\\\":\\\"mP\\\"<br>\"outcomeParameters\\\":\\\"oP\\\"<br>\"market_name\\\":\\\"mN\\\"<br>\"outcome_name\\\":\\\"oN\\\"<br>\"lineItemId\\\":\\\"lIId\\\"<br><br>———<br>**Fonbet:**<br>**live_delay** - variable directly from fonbet \"internals\". You can ignore it.<br>The higher the live_delay, the longer the bet will be accepted. There are bets that are accepted instantly - they have live_delay=0 or 1.<br>Standard is 3-4, but there are matches where it's 5-6.<br><br>———<br>**Unibet**<br>**boId** - this is bet group id<br>**id** - this is directly bet id<br>**event_id** -  eId<br><br>———<br>**Efbet**<br>**pu** - currentpriceup<br>**pd** - currentpricedown<br>**shc** - selectionhashcode<br>**m**n - marketname<br>**im** - idfomarket<br>**et** - eachwayterms<br>**prt** - pricetypes (everywhere)<br>**hv** - hadvalue (not set everywhere, so to not lose it we made it null if missing). HV - not always, actually it's Home/Away/Draw value, exists in some bets but not all. Mostly where it's critical for their internal bet identification.<br><br>At event level, a key is added to meta orig_name - event name as it is on efbet API.<br><br>———<br>**1xbet family (melbet/1xstavka)**<br>**NB** - nameBet/name_bet<br>**NG** - nameGroup/name_group<br>**C** - Price<br>**G** - Bet group id<br>**P** - bet identifier, used in handicaps/totals<br>**T** - bet identifier<br>**SSI** - SubsportID<br>**GN** - gameNum<br>**ei** - event_id<br>**gi** - game_id<br><br>———<br>**888**<br>**s_name** - sport name on site<br><br>———<br>**bet365**<br>**visible_ru** - false/true, \"visibility\" flag. Information about match \"visibility\" from RF version of site. This is determined by several criteria, they are not on the surface.<br>**true** - match is visible<br>**false** - match is unavailable for RF version.<br>Information is available in meta-data for the event itself<br><br>———<br>**eurobet**<br>**betGroup** - top group<br>**oggGroup** - what's inside the block<br>**odd** - third level text<br>**resultCode** - button id, they go in order there, there's no such thing in html, but with this meta you can generally find the bet without much problem<br></p></details><br>",
+        "operationId": "getsure bet",
+        "parameters": [
+          {
+            "name": "fork_id",
+            "description": "sure bet identifier",
+            "required": true,
+            "in": "path",
+            "example": "70a5d610dac4c5c1a6",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns sure bet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sure bet"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "description": "sure bet not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Events"
+        ],
+        "summary": "Get list of all events",
+        "description": "Request to get all events<details><summary>**<i>Examples and description of score formation (expand):</i>**</summary><p><br>**H** - half<br>**G** - game<br>**M** - map (esports)<br>**R** - round<br>**T** - period<br>**S** - set<br>**P** - period<br>**I** - inning (baseball)<br>**Q** - quarter<br><br>**OT** - overtime<br>**B** - break<br>__*__ - whose serve (Badminton, Volleyball)<br><br><br>**Examples:**<br>**1:0 (6:3)|T2,B**<br><br>**B** - means break before 2nd period;<br><br>———<br>**1:0 (6:3 0:0)|S2,B**<br><br>**\"1:0\"** - current score;<br>**\"6:3\"** - in first set;<br>**\"0:0\"** - this is score in second set;<br>**S2,B** - now break before second set;<br><br>———<br>**1:1 (0:1 1:0) 68`**<br><br>**\"68\"** - minutes of play from start of match;<br>**\"1:1\"** - current score;<br>**\"(0:1 1:0)\"** - second half going on. In first half 2nd team scored, and in second half 1st team scored;</p></details><details><summary>**<i>Description of meta components (expand):</i>**</summary><p><br>Meta can change depending on sport and bookmaker! Be careful!<br>We usually don't remove old data, only add new. We always try to inform about changes through our official telegram channel.<br>Something from meta may not be current or if you have any questions, please clarify with tech support.<br><br>We can add something new to meta if you need it. There is a 250 character limit in meta, but we will try to fit it.<br><br>———<br>**Pinnacle**<br>**\"homeTeamType\"** - Team1 / Team2. Team order, which team is meant as home. <br>  - if homeTeamType=TEAM1, then the team order on pinnacle is the same as we indicate<br>  - if homeTeamType=TEAM2, then the team order on pinnacle is reversed, and the second team should be indicated first<br><br>**\"team\"** - TEAM1 / TEAM2. In our sure bet/value data you need to follow this parameter.<br>  - if team=TEAM1 and we see P2, then the bet needs to be changed (P2 to P1)<br>  - if team=TEAM2 and we see P1, then also need to change (P1 to P2)<br>  - if team is empty (this can be for some sports), then do nothing<br><br>**homeTeamType and team are important parameters**, because some events on pinnacle have reversed team order. More details with examples can be found at <a href=\"https://docs.google.com/document/d/1iGGdBPh6odk88EjkGDujPLNqiYpr9Mn6TXhxOJ_1OEc/edit?usp=sharing\">this link</a>.<br><br><br>**Pinnacle:prematch**<br>**\"maybe_freezed\"** - 0/1. Sometimes the event start time has already come, but pinnacle continues to give data about the event via API as if it's still available in prematch, although including on the pinnacle site itself it's no longer there. For such events \"maybe_freezed\":1 will be assigned<br>You can no longer bet on such odds, you can deal with these events at your discretion.<br><br>———</p></details><br>",
+        "operationId": "getEvents",
+        "parameters": [
+          {
+            "name": "sport",
+            "description": "Sport",
+            "in": "query",
+            "example": "soccer,tennis",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bk_name",
+            "description": "Bookmaker identifier",
+            "in": "query",
+            "example": "fonbet",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "live",
+            "description": "Getting **PREMATCH events**. Specify \"**&live=0**\" to get prematch events. By default LIVE events are requested, i.e. for LIVE events this parameter doesn't need to be specified.",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            },
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/events/{bk_event_id}": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Events"
+        ],
+        "summary": "Search for event at specific bookmaker",
+        "description": "Request to search for specific event by id or name<details><summary>**<i>Examples and description of score formation (expand):</i>**</summary><p><br>**H** - half<br>**G** - game<br>**M** - map (esports)<br>**R** - round<br>**T** - period<br>**S** - set<br>**P** - period<br>**I** - inning (baseball)<br>**Q** - quarter<br><br>**OT** - overtime<br>**B** - break<br>__*__ - whose serve (Badminton, Volleyball)<br><br><br>**Examples:**<br>**1:0 (6:3)|T2,B**<br><br>**B** - means break before 2nd period;<br><br>———<br>**1:0 (6:3 0:0)|S2,B**<br><br>**\"1:0\"** - current score;<br>**\"6:3\"** - in first set;<br>**\"0:0\"** - this is score in second set;<br>**S2,B** - now break before second set;<br><br>———<br>**1:1 (0:1 1:0) 68`**<br><br>**\"68\"** - minutes of play from start of match;<br>**\"1:1\"** - current score;<br>**\"(0:1 1:0)\"** - second half going on. In first half 2nd team scored, and in second half 1st team scored;</p></details>",
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "name": "bk_event_id",
+            "required": true,
+            "description": "event id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "example": "WLNBS21B94619065"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "description": "Event not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    },
+    "/groups/{event_id}": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Events"
+        ],
+        "summary": "Get group of related events",
+        "description": "Request to get all events from different bookmakers that\nare grouped together<br><br>__Request example&#58;__ <i>http&#58;//api.oddscp.com&#58;8111/groups/23313791?show_names=1&token=afdjd8fd8rjkfu7fa7f3 </i> <br>",
+        "operationId": "getGroup",
+        "parameters": [
+          {
+            "name": "event_id",
+            "required": true,
+            "description": "group id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "example": 182220
+          },
+          {
+            "name": "show_names",
+            "description": "Specify \"**?show_names=1**\" to display names of grouped events.",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            },
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "ids": {
+                      "lootbet": "LBTSCC7E1368C8B2",
+                      "cbetgg": "CBGSC38C2AA10324",
+                      "bet365": "BT3SC88126EEE8F0",
+                      "parimatch_by": "PABSCCCA809DB401"
+                    },
+                    "status": "OK",
+                    "event_names": {
+                      "LBTSCC7E1368C8B2": "Abingdon United (w) vs Maidenhead United (w)",
+                      "CBGSC38C2AA10324": "Abingdon United W. vs Maidenhead United W.",
+                      "BT3SC88126EEE8F0": "Abingdon United Women vs Maidenhead Utd Women",
+                      "PABSCCCA809DB401": "Abingdon Un(women) vs Maidenhead Un(women)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/markets": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Events"
+        ],
+        "summary": "Search for markets",
+        "description": "Request to search for markets by specified parameters.<br>One of the parameters is mandatory in request - __bk_event_ids__ and/or __bk_name__<br><details><summary>**<i>Description of meta components (expand):</i>**</summary><p><br>Meta can change depending on sport and bookmaker! Be careful!<br>We usually don't remove old data, only add new. We always try to inform about changes through our official telegram channel.<br>Something from meta may not be current or if you have any questions, please clarify with tech support.<br><br>We can add something new to meta if you need it. There is a 250 character limit in meta, but we will try to fit it.<br><br>———<br>**Pinnacle**<br>**\"key\":\"s;0;s;0.25** - this is marketKey, specifically this one - handicap in play 0.25<br>**\"dest\"** - can be \"null\" if the outcome doesn't have this field<br>**\"dest\\\":\\\"under\\\"** - new key for TU (TotalUnder)<br>**\"dest\\\":\\\"over\\\"** - new key for TO (TotalOver)<br>**\"points\"** - for handicaps and totals with original value from API, i.e. without considering sign and score for handicaps. For other bet types, the 'points' field is not added to meta.<br><br>**\"homeTeamType\"** - Team1 / Team2. Team order, which team is meant as home. <br>  - if homeTeamType=TEAM1, then the team order on pinnacle is the same as we indicate<br>  - if homeTeamType=TEAM2, then the team order on pinnacle is reversed, and the second team should be indicated first<br><br>**\"team\"** - TEAM1 / TEAM2. In our sure bet/value data you need to follow this parameter.<br>  - if team=TEAM1 and we see P2, then the bet needs to be changed (P2 to P1)<br>  - if team=TEAM2 and we see P1, then also need to change (P1 to P2)<br>  - if team is empty (this can be for some sports), then do nothing<br><br>**homeTeamType and team are important parameters**, because some events on pinnacle have reversed team order. More details with examples can be found at <a href=\"https://docs.google.com/document/d/1iGGdBPh6odk88EjkGDujPLNqiYpr9Mn6TXhxOJ_1OEc/edit?usp=sharing\">this link</a>.<br><br>———<br>**Parimatch(parimatch_com)**<br>Abbreviated parameter names in meta:<br>\"resultKind\\\":\\\"rK\\\"<br>\"outcomeType\\\":\\\"oT\\\"<br>\"period\\\":\\\"p\\\"<br>\"subPeriod\\\":\\\"sP\\\"<br>\"marketType\\\":\\\"mT\\\"<br>\"marketParameters\\\":\\\"mP\\\"<br>\"outcomeParameters\\\":\\\"oP\\\"<br>\"market_name\\\":\\\"mN\\\"<br>\"outcome_name\\\":\\\"oN\\\"<br>\"lineItemId\\\":\\\"lIId\\\"<br><br>———<br>**Fonbet:**<br>**live_delay** - variable directly from fonbet \"internals\". You can ignore it.<br>The higher the live_delay, the longer the bet will be accepted. There are bets that are accepted instantly - they have live_delay=0 or 1.<br>Standard is 3-4, but there are matches where it's 5-6.<br><br>———<br>**Unibet**<br>**boId** - this is bet group id<br>**id** - this is directly bet id<br>**event_id** -  eId<br><br>———<br>**Efbet**<br>**pu** - currentpriceup<br>**pd** - currentpricedown<br>**shc** - selectionhashcode<br>**m**n - marketname<br>**im** - idfomarket<br>**et** - eachwayterms<br>**prt** - pricetypes (everywhere)<br>**hv** - hadvalue (not set everywhere, so to not lose it we made it null if missing). HV - not always, actually it's Home/Away/Draw value, exists in some bets but not all. Mostly where it's critical for their internal bet identification.<br><br>At event level, a key is added to meta orig_name - event name as it is on efbet API.<br><br>———<br>**1xbet family (melbet/1xstavka)**<br>**NB** - nameBet/name_bet<br>**NG** - nameGroup/name_group<br>**C** - Price<br>**G** - Bet group id<br>**P** - bet identifier, used in handicaps/totals<br>**T** - bet identifier<br>**SSI** - SubsportID<br>**GN** - gameNum<br>**ei** - event_id<br>**gi** - game_id<br><br>———<br>**888**<br>**s_name** - sport name on site<br><br>———<br>**bet365**<br>**visible_ru** - false/true, \"visibility\" flag. Information about match \"visibility\" from RF version of site. This is determined by several criteria, they are not on the surface.<br>**true** - match is visible<br>**false** - match is unavailable for RF version.<br>Information is available in meta-data for the event itself<br><br>———<br>**eurobet**<br>**betGroup** - top group<br>**oggGroup** - what's inside the block<br>**odd** - third level text<br>**resultCode** - button id, they go in order there, there's no such thing in html, but with this meta you can generally find the bet without much problem<br></p></details><br>",
+        "operationId": "getMarkets",
+        "parameters": [
+          {
+            "name": "bk_event_ids",
+            "required": true,
+            "description": "list of event ids",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "FONBM50F801035DE,OLPBM3A2C25A6CAF"
+          },
+          {
+            "name": "sport",
+            "required": false,
+            "description": "List of sports types",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "tennis,soccer"
+          },
+          {
+            "name": "bk_name",
+            "required": true,
+            "description": "Bookmaker identifier",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "fonbet"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Market"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "description": "Market not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    },
+    "/markets/{bk_event_id}": {
+      "get": {
+        "tags": [
+          "PREMATCH / LIVE - Events"
+        ],
+        "summary": "Getting all markets for specific event",
+        "description": "Request to search for all markets of specific event<br><details><summary>**<i>Description of meta components (expand):</i>**</summary><p><br>Meta can change depending on sport and bookmaker! Be careful!<br>We usually don't remove old data, only add new. We always try to inform about changes through our official telegram channel.<br>Something from meta may not be current or if you have any questions, please clarify with tech support.<br><br>We can add something new to meta if you need it. There is a 250 character limit in meta, but we will try to fit it.<br><br>———<br>**Pinnacle**<br>**\"key\":\"s;0;s;0.25** - this is marketKey, specifically this one - handicap in play 0.25<br>**\"dest\"** - can be \"null\" if the outcome doesn't have this field<br>**\"dest\\\":\\\"under\\\"** - new key for TU (TotalUnder)<br>**\"dest\\\":\\\"over\\\"** - new key for TO (TotalOver)<br>**\"points\"** - for handicaps and totals with original value from API, i.e. without considering sign and score for handicaps. For other bet types, the 'points' field is not added to meta.<br><br>**\"homeTeamType\"** - Team1 / Team2. Team order, which team is meant as home. <br>  - if homeTeamType=TEAM1, then the team order on pinnacle is the same as we indicate<br>  - if homeTeamType=TEAM2, then the team order on pinnacle is reversed, and the second team should be indicated first<br><br>**\"team\"** - TEAM1 / TEAM2. In our sure bet/value data you need to follow this parameter.<br>  - if team=TEAM1 and we see P2, then the bet needs to be changed (P2 to P1)<br>  - if team=TEAM2 and we see P1, then also need to change (P1 to P2)<br>  - if team is empty (this can be for some sports), then do nothing<br><br>**homeTeamType and team are important parameters**, because some events on pinnacle have reversed team order. More details with examples can be found at <a href=\"https://docs.google.com/document/d/1iGGdBPh6odk88EjkGDujPLNqiYpr9Mn6TXhxOJ_1OEc/edit?usp=sharing\">this link</a>.<br><br>———<br>**Parimatch(parimatch_com)**<br>Abbreviated parameter names in meta:<br>\"resultKind\\\":\\\"rK\\\"<br>\"outcomeType\\\":\\\"oT\\\"<br>\"period\\\":\\\"p\\\"<br>\"subPeriod\\\":\\\"sP\\\"<br>\"marketType\\\":\\\"mT\\\"<br>\"marketParameters\\\":\\\"mP\\\"<br>\"outcomeParameters\\\":\\\"oP\\\"<br>\"market_name\\\":\\\"mN\\\"<br>\"outcome_name\\\":\\\"oN\\\"<br>\"lineItemId\\\":\\\"lIId\\\"<br><br>———<br>**Fonbet:**<br>**live_delay** - variable directly from fonbet \"internals\". You can ignore it.<br>The higher the live_delay, the longer the bet will be accepted. There are bets that are accepted instantly - they have live_delay=0 or 1.<br>Standard is 3-4, but there are matches where it's 5-6.<br><br>———<br>**Unibet**<br>**boId** - this is bet group id<br>**id** - this is directly bet id<br>**event_id** -  eId<br><br>———<br>**Efbet**<br>**pu** - currentpriceup<br>**pd** - currentpricedown<br>**shc** - selectionhashcode<br>**m**n - marketname<br>**im** - idfomarket<br>**et** - eachwayterms<br>**prt** - pricetypes (everywhere)<br>**hv** - hadvalue (not set everywhere, so to not lose it we made it null if missing). HV - not always, actually it's Home/Away/Draw value, exists in some bets but not all. Mostly where it's critical for their internal bet identification.<br><br>At event level, a key is added to meta orig_name - event name as it is on efbet API.<br><br>———<br>**1xbet family (melbet/1xstavka)**<br>**NB** - nameBet/name_bet<br>**NG** - nameGroup/name_group<br>**C** - Price<br>**G** - Bet group id<br>**P** - bet identifier, used in handicaps/totals<br>**T** - bet identifier<br>**SSI** - SubsportID<br>**GN** - gameNum<br>**ei** - event_id<br>**gi** - game_id<br><br>———<br>**888**<br>**s_name** - sport name on site<br><br>———<br>**bet365**<br>**visible_ru** - false/true, \"visibility\" flag. Information about match \"visibility\" from RF version of site. This is determined by several criteria, they are not on the surface.<br>**true** - match is visible<br>**false** - match is unavailable for RF version.<br>Information is available in meta-data for the event itself<br><br>———<br>**eurobet**<br>**betGroup** - top group<br>**oggGroup** - what's inside the block<br>**odd** - third level text<br>**resultCode** - button id, they go in order there, there's no such thing in html, but with this meta you can generally find the bet without much problem<br></p></details><br>",
+        "operationId": "getEventMarkets",
+        "parameters": [
+          {
+            "name": "bk_event_id",
+            "required": true,
+            "description": "event id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "example": "WLNBS21B94619065"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Market"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "422": {
+            "$ref": "#/components/responses/MissingParameterError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Value": {
+        "type": "object",
+        "required": [
+          "fork_id",
+          "event_id",
+          "income",
+          "BK1_name",
+          "BK2_name",
+          "BK1_bet_type",
+          "BK2_bet_type",
+          "bet_type",
+          "sport",
+          "BK1_game",
+          "BK2_game",
+          "BK1_bet",
+          "BK2_bet",
+          "BK1_alt_bet",
+          "BK2_alt_bet",
+          "BK1_cf",
+          "BK2_cf",
+          "BK1_event_id",
+          "BK2_event_id",
+          "BK1_event_native_id",
+          "BK2_event_native_id",
+          "BK1_event_meta",
+          "BK2_event_meta",
+          "BK1_market_meta",
+          "BK2_market_meta",
+          "BK1_href",
+          "BK2_href",
+          "BK1_league",
+          "BK2_league",
+          "BK1_score",
+          "BK2_score",
+          "alive_sec"
+        ],
+        "properties": {
+          "fork_id": {
+            "type": "string",
+            "description": "Value bet ID (value bet key)"
+          },
+          "event_id": {
+            "type": "number",
+            "description": "Event group identifier"
+          },
+          "income": {
+            "type": "number",
+            "description": "Value bet % (fi)"
+          },
+          "BK1_name": {
+            "type": "string",
+            "description": "Bookmaker identifier where value bet is (BK-1)",
+            "example": "fonbet"
+          },
+          "BK2_name": {
+            "type": "string",
+            "description": "Always \"valuebets\"",
+            "example": "valuebets"
+          },
+          "BK1_bet_type": {
+            "description": "Bet type at BK-1",
+            "$ref": "#/components/schemas/BetType"
+          },
+          "BK2_bet_type": {
+            "description": "Bet type at BK-2",
+            "$ref": "#/components/schemas/BetType"
+          },
+          "bet_type": {
+            "description": "General bet type in sure bet. If bk1_bet_type = bk2_bet_type,\nthen bet_type = bk1_bet_type, otherwise MIX"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport type",
+            "example": "tennis"
+          },
+          "BK1_game": {
+            "type": "string",
+            "description": "Event name at BK-1"
+          },
+          "BK2_game": {
+            "type": "string",
+            "description": "Event name at BK-2"
+          },
+          "BK1_bet": {
+            "type": "string",
+            "description": "Bet at BK-1"
+          },
+          "BK2_bet": {
+            "type": "string",
+            "description": "Bet at BK-2"
+          },
+          "BK1_alt_bet": {
+            "type": "string",
+            "nullable": true,
+            "description": "Alternative bet at BK-1"
+          },
+          "BK2_alt_bet": {
+            "type": "string",
+            "nullable": true,
+            "description": "Alternative bet at BK-2"
+          },
+          "BK1_cf": {
+            "type": "number",
+            "description": "Odds at BK-1"
+          },
+          "BK2_cf": {
+            "type": "number",
+            "description": "Odds at BK-2"
+          },
+          "BK1_event_id": {
+            "type": "string",
+            "description": "Event identifier (our internal) at BK-1"
+          },
+          "BK2_event_id": {
+            "type": "string",
+            "description": "Event identifier (our internal) at BK-2"
+          },
+          "BK1_event_native_id": {
+            "type": "string",
+            "description": "Event identifier (native, as at bookmaker itself) at BK-1"
+          },
+          "BK2_event_native_id": {
+            "type": "string",
+            "description": "Event identifier (native, as at bookmaker itself) at BK-2"
+          },
+          "BK1_event_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for event at BK-1"
+          },
+          "BK2_event_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for event at BK-2"
+          },
+          "BK1_market_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for finding needed bet at BK-1"
+          },
+          "BK2_market_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for finding needed bet at BK-2"
+          },
+          "BK1_href": {
+            "type": "string",
+            "description": "Link to event at BK-1"
+          },
+          "BK2_href": {
+            "type": "string",
+            "description": "Link to event at BK-2"
+          },
+          "BK1_league": {
+            "type": "string",
+            "description": "League name at BK-1"
+          },
+          "BK2_league": {
+            "type": "string",
+            "description": "League name at BK-2"
+          },
+          "BK1_score": {
+            "type": "string",
+            "description": "Current score at BK-1"
+          },
+          "BK2_score": {
+            "type": "string",
+            "description": "Current score at BK-2"
+          },
+          "alive_sec": {
+            "type": "string",
+            "description": "How many seconds sure bet has percentage above specified in alive_prc (-1%)"
+          },
+          "valuing_data": {
+            "type": "string",
+            "description": "Format - JSON. Odds at other bookmakers, value calculations, score at other bookmakers and last odds change time."
+          }
+        },
+        "example": {
+          "fork_id": "8a86a9cd528b53b366",
+          "income": 0,
+          "sport": "volleyball",
+          "bet_type": "WIN",
+          "event_id": "178089",
+          "BK1_bet": "WIN__P1",
+          "BK1_bet_type": "WIN",
+          "BK1_alt_bet": "",
+          "BK1_cf": 3,
+          "BK1_event_id": "BT3VBD2545FB3320",
+          "BK1_event_native_id": "6V200234215476232932C91A_1_1",
+          "BK1_game": "Zenit Novosibirsk-pro vs Izumrud Berdsk-pro",
+          "BK1_href": "https://www.bet365.com/#/IP/EV15924988815C13",
+          "BK1_league": "Russia Liga Pro",
+          "BK1_name": "bet365",
+          "BK1_score": "1:1 (19:25 25:23 17:20)",
+          "BK1_event_meta": "",
+          "BK1_market_meta": "{\"betId\":\"687799702\",\"name\":\"Game Lines|Zenit Novosibirsk-pro|Winner\"}",
+          "BK2_bet": "WIN__P1",
+          "BK2_bet_type": "WIN",
+          "BK2_alt_bet": "",
+          "BK2_cf": 2.75,
+          "BK2_event_id": "",
+          "BK2_event_native_id": "",
+          "BK2_game": "",
+          "BK2_href": "",
+          "BK2_league": "",
+          "BK2_name": "valuebets",
+          "BK2_score": "",
+          "BK2_event_meta": "",
+          "BK2_market_meta": "",
+          "alive_sec": 32,
+          "valuing_data": "{ \"cfs\": { \"BT3\": [ \"21\", 120, \"0:2 (9:25 13:25 19:21)\", 4.56 ], \"WLN\": [ \"12.25\", 23, \"0:2 (9:25 13:25 19:21)\", 8.16 ], \"1WN\": [ \"11\", 77, \"0:2 (9:25 13:25 19:21)\", null ], \"STY\": [ \"11\", 137, \"0:2 (9:25 13:25 19:21)\", 8.1 ] }, \"data\": { \"need_cfs\": [ 12.25, 11, 11 ], \"cf_orig\": 21, \"aw_avg\": -4.1, \"aw_mdn\": -4.1, \"ow_avg\": -0.1, \"ow_mdn\": -0.1, \"ow2_avg\": -2.1, \"ow2_mdn\": 1.3, \"cf_mdn\": 11, \"cf_avg\": 11.387, \"cf_avg2\": 0.8442, \"cf_mdn2\": 0.9091, \"diff_avg\": 4.2, \"diff_mdn\": 4.5, \"min_max_dst\": 4.1, \"total_cnt\": 3, \"total_pos\": 1, \"better_cnt\": 0, \"min_aw\": -4.64, \"min_ow\": -1.12, \"min_diff\": 3.4 }"
+        }
+      },
+      "ValueData": {
+        "type": "object",
+        "required": [
+          "cfs",
+          "data"
+        ],
+        "properties": {
+          "cfs": {
+            "type": "string",
+            "description": "Odds at other bookmakers (Current odds, How many seconds ago odds changed, Current score in match, Margin.)"
+          },
+          "data": {
+            "type": "number",
+            "description": "Value calculations"
+          }
+        },
+        "example": {
+          "cfs": {
+            "BT3": "[ \"21\", 120, \"0:2 (9:25 13:25 19:21)\", 4.56 ]",
+            "WLN": "[ \"12.25\", 23, \"0:2 (9:25 13:25 19:21)\", 8.16 ]",
+            "1WN": "[ \"11\", 77, \"0:2 (9:25 13:25 19:21)\", null ]",
+            "STY": "[ \"11\", 137, \"0:2 (9:25 13:25 19:21)\", 8.1 ]"
+          },
+          "data": {
+            "need_cfs": "[ 12.25, 11, 11 ]",
+            "cf_orig": 21,
+            "aw_avg": -4.1,
+            "aw_mdn": -4.1,
+            "ow_avg": -0.1,
+            "ow_mdn": -0.1,
+            "ow2_avg": -2.1,
+            "ow2_mdn": 1.3,
+            "cf_mdn": 11,
+            "cf_avg": 11.387,
+            "cf_avg2": 0.8442,
+            "cf_mdn2": 0.9091,
+            "diff_avg": 4.2,
+            "diff_mdn": 4.5,
+            "min_max_dst": 4.1,
+            "total_cnt": 3,
+            "total_pos": 1,
+            "better_cnt": 0,
+            "min_aw": -4.64,
+            "min_ow": -1.12,
+            "min_diff": 3.4
+          }
+        }
+      },
+      "sure bet": {
+        "type": "object",
+        "required": [
+          "fork_id",
+          "event_id",
+          "income",
+          "ow_income",
+          "is_middles",
+          "is_cyber",
+          "BK1_name",
+          "BK2_name",
+          "BK1_bet_type",
+          "BK2_bet_type",
+          "bet_type",
+          "sport",
+          "BK1_game",
+          "BK2_game",
+          "BK1_bet",
+          "BK2_bet",
+          "BK1_alt_bet",
+          "BK2_alt_bet",
+          "BK1_cf",
+          "BK2_cf",
+          "BK1_event_id",
+          "BK2_event_id",
+          "BK1_event_native_id",
+          "BK2_event_native_id",
+          "BK1_event_meta",
+          "BK2_event_meta",
+          "BK1_market_meta",
+          "BK2_market_meta",
+          "BK1_href",
+          "BK2_href",
+          "BK1_league",
+          "BK2_league",
+          "BK1_score",
+          "BK2_score",
+          "alive_sec"
+        ],
+        "properties": {
+          "fork_id": {
+            "type": "string",
+            "description": "sure bet key (fork_key)"
+          },
+          "event_id": {
+            "type": "number",
+            "description": "Event group identifier"
+          },
+          "income": {
+            "type": "number",
+            "description": "sure bet % (fi)"
+          },
+          "ow_income": {
+            "type": "number",
+            "description": "fi * 2 + bk1_margin + bk2_margin (ow)"
+          },
+          "is_middles": {
+            "type": "boolean",
+            "description": "false - regular sure bet, true - middle"
+          },
+          "is_cyber": {
+            "type": "boolean",
+            "description": "false - not esports, true - is esports"
+          },
+          "BK1_name": {
+            "type": "string",
+            "description": "First bookmaker identifier (BK-1)",
+            "example": "fonbet"
+          },
+          "BK2_name": {
+            "type": "string",
+            "description": "Second bookmaker identifier (BK-2)",
+            "example": "fonbet"
+          },
+          "BK1_bet_type": {
+            "description": "Bet type at BK-1",
+            "$ref": "#/components/schemas/BetType"
+          },
+          "BK2_bet_type": {
+            "description": "Bet type at BK-2",
+            "$ref": "#/components/schemas/BetType"
+          },
+          "bet_type": {
+            "description": "General bet type in sure bet. If bk1_bet_type = bk2_bet_type,\nthen bet_type = bk1_bet_type, otherwise MIX"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport type",
+            "example": "tennis"
+          },
+          "BK1_game": {
+            "type": "string",
+            "description": "Event name at BK-1"
+          },
+          "BK2_game": {
+            "type": "string",
+            "description": "Event name at BK-2"
+          },
+          "BK1_bet": {
+            "type": "string",
+            "description": "Bet at BK-1"
+          },
+          "BK2_bet": {
+            "type": "string",
+            "description": "Bet at BK-2"
+          },
+          "BK1_alt_bet": {
+            "type": "string",
+            "nullable": true,
+            "description": "Alternative bet at BK-1"
+          },
+          "BK2_alt_bet": {
+            "type": "string",
+            "nullable": true,
+            "description": "Alternative bet at BK-2"
+          },
+          "BK1_cf": {
+            "type": "number",
+            "description": "Odds at BK-1"
+          },
+          "BK2_cf": {
+            "type": "number",
+            "description": "Odds at BK-2"
+          },
+          "BK1_event_id": {
+            "type": "string",
+            "description": "Event identifier (our internal) at BK-1"
+          },
+          "BK2_event_id": {
+            "type": "string",
+            "description": "Event identifier (our internal) at BK-2"
+          },
+          "BK1_event_native_id": {
+            "type": "string",
+            "description": "Event identifier (native, as at bookmaker itself) at BK-1"
+          },
+          "BK2_event_native_id": {
+            "type": "string",
+            "description": "Event identifier (native, as at bookmaker itself) at BK-2"
+          },
+          "BK1_event_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for event at BK-1"
+          },
+          "BK2_event_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for event at BK-2"
+          },
+          "BK1_market_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for finding needed bet at BK-1"
+          },
+          "BK2_market_meta": {
+            "type": "string",
+            "description": "Format: JSON. Meta-data for finding needed bet at BK-2"
+          },
+          "BK1_href": {
+            "type": "string",
+            "description": "Link to event at BK-1"
+          },
+          "BK2_href": {
+            "type": "string",
+            "description": "Link to event at BK-2"
+          },
+          "BK1_league": {
+            "type": "string",
+            "description": "League name at BK-1"
+          },
+          "BK2_league": {
+            "type": "string",
+            "description": "League name at BK-2"
+          },
+          "BK1_score": {
+            "type": "string",
+            "description": "Current score at BK-1"
+          },
+          "BK2_score": {
+            "type": "string",
+            "description": "Current score at BK-2"
+          },
+          "alive_sec": {
+            "type": "string",
+            "description": "How many seconds sure bet has percentage above specified in alive_prc (-1%)"
+          },
+          "cfs1": {
+            "type": "string",
+            "description": "Odds for team №1"
+          },
+          "cfs2": {
+            "type": "string",
+            "description": "Odds for team №2"
+          },
+          "all_scores": {
+            "type": "string",
+            "description": "Current score on sure bet match across all bookmakers."
+          },
+          "BK1_event_swapped": {
+            "type": "string",
+            "description": "Was team order reversed at BK1."
+          },
+          "BK2_event_swapped": {
+            "type": "string",
+            "description": "Was team order reversed at BK2."
+          }
+        },
+        "example": {
+          "fork_id": "8a86a9cd528b53b366",
+          "income": 0,
+          "sport": "volleyball",
+          "bet_type": "WIN",
+          "event_id": "178089",
+          "is_middles": "0",
+          "is_cyber": "0",
+          "ow_income": 14.98,
+          "BK1_bet": "WIN__P1",
+          "BK1_bet_type": "WIN",
+          "BK1_alt_bet": "",
+          "BK1_cf": 3,
+          "BK1_event_id": "BT3VBD2545FB3320",
+          "BK1_event_native_id": "6V200234215476232932C91A_1_1",
+          "BK1_game": "Zenit Novosibirsk-pro vs Izumrud Berdsk-pro",
+          "BK1_href": "https://www.bet365.com/#/IP/EV15924988815C13",
+          "BK1_league": "Russia Liga Pro",
+          "BK1_name": "bet365",
+          "BK1_score": "1:1 (19:25 25:23 17:20)",
+          "BK1_event_meta": "",
+          "BK1_market_meta": "{\"betId\":\"687799702\",\"name\":\"Game Lines|Zenit Novosibirsk-pro|Winner\"}",
+          "BK2_bet": "WIN__P2",
+          "BK2_bet_type": "WIN",
+          "BK2_alt_bet": "",
+          "BK2_cf": 1.5,
+          "BK2_event_id": "FONVB5B99B3C9A2B",
+          "BK2_event_native_id": "20190837",
+          "BK2_game": "Zenit Novosibirsk-pro vs Izumrud Berdsk-pro",
+          "BK2_href": "https://www.fonbet.ru//sport/event/volleyball/45580/20190837/",
+          "BK2_league": "Russia. Liga Pro. Novosibirsk",
+          "BK2_name": "fonbet",
+          "BK2_score": "1:1 (19:25 25:23 17:20*)",
+          "BK2_event_meta": "",
+          "BK2_market_meta": "{\"isHeader\":true,\"fieldName\":\"v2\",\"factor_id\":923}",
+          "alive_sec": 32,
+          "cfs1": "{\"SBI\":\"2.74\",\"XST\":\"2.89\",\"PAB\":\"3.15\",\"PAC\":\"3.15\",\"PAN\":\"3.15\",\"IFO\":\"2.93\",\"STX\":\"3.45\",\"OLC\":\"3.08\",\"TNC\":\"3.03\",\"DOW\":\"3.326\",\"DAF\":\"3.43\",\"LBT\":\"3.08\",\"VBT\":\"2.95\",\"BOR\":\"2.95\",\"OLP\":\"2.06\",\"XBI\":\"2.856\",\"XBT\":\"2.89\",\"MLB\":\"2.856\",\"PIN\":\"3.55\",\"BT3\":\"2.825\",\"BCY\":\"3.2\",\"BCT\":\"3.2\",\"WLN\":\"2.86\",\"BVD\":\"2.9\",\"BNB\":\"2.94\",\"FAV\":\"2.64\",\"ZEN\":\"2.97\",\"GGB\":\"3.01\",\"GGG\":\"3.01\",\"MTH\":\"3.2\",\"MTU\":\"3.2\"}",
+          "cfs2": "{\"SBI\":\"1.34\",\"XST\":\"1.43\",\"PAB\":\"1.33\",\"PAC\":\"1.33\",\"PAN\":\"1.33\",\"IFO\":\"1.29\",\"STX\":\"1.26\",\"OLC\":\"1.32\",\"TNC\":\"1.33\",\"DOW\":\"1.25\",\"DAF\":\"1.23\",\"LBT\":\"1.3\",\"VBT\":\"1.35\",\"BOR\":\"1.35\",\"OLP\":\"1.68\",\"XBI\":\"1.41\",\"XBT\":\"1.43\",\"MLB\":\"1.41\",\"PIN\":\"1.268\",\"BT3\":\"1.375\",\"BCY\":\"1.3\",\"BCT\":\"1.3\",\"WLN\":\"1.34\",\"BVD\":\"1.385\",\"BNB\":\"1.35\",\"FAV\":\"1.41\",\"ZEN\":\"1.35\",\"GGB\":\"1.32\",\"GGG\":\"1.32\",\"MTH\":\"1.3\",\"MTU\":\"1.3\"}",
+          "all_scores": "\\[[[\"SBI\"],\"2:0 ( 2:0)\"],[[\"XST\"],\"2:0 (2:0) 30:12|H1\"],[[\"PAB\",\"PAC\",\"PAN\",\"BCY\"],\"2:0 (2:0) 30:07\"],[[\"IFO\",\"LBT\"],\"2:0 (2:0)\"],[[\"STX\"],\"2:0 30:19\"],[[\"OLC\"],\"2:0 31\\\"\"],[[\"TNC\",\"DOW\",\"PIN\",\"GGB\",\"GGG\"],\"2:0\"],[[\"DAF\"],\"0:0\"],[[\"VBT\",\"BOR\"],\"2:0 (2:0) 31`\"],[[\"OLP\"],\"2:0 19:00\"],[[\"XBI\"],\"2:0 (2:0) 30:09|H1\"],[[\"XBT\"],\"2:0 (2:0) 30:08|H1\"],[[\"MLB\"],\"2:0 (2:0) 30:07|H1\"],[[\"BT3\"],\"2:0 30:14\"],[[\"BCT\",\"FAV\"],\"2:0 (2:0) 30:06\"],[[\"WLN\"],\"2:0 (2:0) 30\"],[[\"BVD\"],\"2:0 (2:0) 17:28\"],[[\"BNB\"],\"\"],[[\"ZEN\"],\"2:0 31\"],[[\"MTH\",\"MTU\"],\"2:0 30:00 \"]]",
+          "BK1_event_swapped": "0",
+          "BK2_event_swapped": "0"
+        }
+      },
+      "Sport": {
+        "type": "object",
+        "required": [
+          "sport_id",
+          "sport_name",
+          "display_name_ru",
+          "display_name_en"
+        ],
+        "properties": {
+          "sport_id": {
+            "type": "string",
+            "description": "Short sport designation"
+          },
+          "sport_name": {
+            "type": "string",
+            "description": "Used for requests"
+          },
+          "display_name_ru": {
+            "type": "string",
+            "description": "Name in Russian"
+          },
+          "display_name_en": {
+            "type": "string",
+            "description": "Name in English"
+          }
+        },
+        "example": {
+          "sport_id": "TN",
+          "sport_name": "tennis",
+          "display_name_ru": "Tennis",
+          "display_name_en": "Tennis"
+        }
+      },
+      "Bookmaker": {
+        "type": "object",
+        "required": [
+          "bk_id",
+          "bk_name",
+          "display_name_ru",
+          "display_name_en",
+          "production",
+          "private",
+          "active"
+        ],
+        "properties": {
+          "bk_id": {
+            "type": "string",
+            "description": "Short bookmaker designation"
+          },
+          "bk_name": {
+            "type": "string",
+            "description": "Used for requests"
+          },
+          "display_name_ru": {
+            "type": "string",
+            "description": "Name in Russian"
+          },
+          "display_name_en": {
+            "type": "string",
+            "description": "Name in English"
+          },
+          "production": {
+            "type": "string",
+            "description": "Bookmaker is tested"
+          },
+          "private": {
+            "type": "string",
+            "description": "Bookmaker is private"
+          },
+          "active": {
+            "type": "string",
+            "description": "Bookmaker is available for requests"
+          }
+        },
+        "example": {
+          "bk_id": "FON",
+          "bk_name": "fonbet",
+          "display_name": "Fonbet",
+          "display_name_en": "Fonbet",
+          "production": "1",
+          "private": "0",
+          "active": "1"
+        }
+      },
+      "BetType": {
+        "type": "string",
+        "enum": [
+          "MIX",
+          "WIN",
+          "WIN_OT",
+          "WIN_RT",
+          "SET_WIN",
+          "HALF_WIN",
+          "HALF_WIN_OT",
+          "GAME_WIN",
+          "TOTALS",
+          "SET_TOTALS",
+          "HALF_TOTALS",
+          "TOTALS_OT",
+          "TOTALS_RT",
+          "HALF_TOTALS_OT",
+          "TEAM_TOTALS_CORNERS",
+          "TEAM_TOTALS",
+          "SET_TEAM_TOTALS",
+          "HALF_TEAM_TOTALS",
+          "TEAM_TOTALS_OT",
+          "TEAM_TOTALS_RT",
+          "HANDICAP",
+          "HANDICAP_3W",
+          "HALF_HANDICAP",
+          "SET_HANDICAP",
+          "HANDICAP_OT",
+          "HANDICAP_RT",
+          "HALF_HANDICAP_OT",
+          "TEAMS_TO_SCORE",
+          "SET_TEAMS_TO_SCORE",
+          "HALF_TEAMS_TO_SCORE",
+          "CORRECT_SCORE",
+          "SET_CORRECT_SCORE",
+          "HALF_CORRECT_SCORE",
+          "WHO_SCORE",
+          "SET_WHO_SCORE",
+          "HALF_WHO_SCORE",
+          "WILL_BE_OT",
+          "SET_WILL_BE_OT",
+          "FIRST_TO_SCORE",
+          "TOTALS_ODD",
+          "SET_TOTALS_ODD",
+          "HALF_TOTALS_ODD",
+          "TEAM_TOTALS_ODD",
+          "SET_TEAM_TOTALS_ODD",
+          "HALF_TEAM_TOTALS_ODD",
+          "CLEAN_SHEET",
+          "SETS_TOTALS",
+          "SETS_HANDICAP",
+          "WIN_HALF_MATCH",
+          "TOTALS_CORNERS",
+          "HALF_TOTALS_CORNERS",
+          "HANDICAP_CORNERS",
+          "HALF_HANDICAP_CORNERS",
+          "ASIAN_TOTALS",
+          "SET_TOTALS",
+          "HALF_TOTALS",
+          "WIN_CORNERS",
+          "HALF_WIN_CORNERS",
+          "ASIAN_TOTALS_CORNERS",
+          "HALF_ASIAN_TOTALS_CORNERS",
+          "WHO_SCORE_3W",
+          "SET_TOTALS_3W",
+          "HALF_TOTALS_CORNERS_3W",
+          "HALF_TOTALS_3W",
+          "TOTALS_CORNERS_3W",
+          "TOTALS3W_CORNERS",
+          "HALF_TOTALS3W_CORNERS",
+          "TEAM_GOALS",
+          "SET_TEAM_GOALS",
+          "HALF_TEAM_GOALS"
+        ]
+      },
+      "Event": {
+        "type": "object",
+        "required": [
+          "bk_event_id",
+          "bk_event_native_id",
+          "bk_name",
+          "bk_id",
+          "event_id",
+          "event_name",
+          "team1",
+          "team2",
+          "direct_link",
+          "league_name",
+          "score",
+          "sport",
+          "sport_id",
+          "active",
+          "updated_at",
+          "last_cf_at",
+          "swapped"
+        ],
+        "properties": {
+          "bk_name": {
+            "type": "string",
+            "example": "fonbet",
+            "description": "Bookmaker identifier"
+          },
+          "bk_id": {
+            "type": "string",
+            "example": "FON",
+            "description": "Short bookmaker designation"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event group identifier"
+          },
+          "bk_event_id": {
+            "type": "string",
+            "description": "Event identifier inside system"
+          },
+          "bk_event_native_id": {
+            "type": "string",
+            "description": "Event identifier at bookmaker"
+          },
+          "event_name": {
+            "type": "string",
+            "description": "Full event name"
+          },
+          "team1": {
+            "type": "string",
+            "description": "First team name"
+          },
+          "team2": {
+            "type": "string",
+            "description": "Second team name"
+          },
+          "direct_link": {
+            "type": "string",
+            "description": "Link to event at bookmaker"
+          },
+          "league_name": {
+            "type": "string",
+            "description": "League/competition name"
+          },
+          "score": {
+            "type": "string",
+            "description": "Current score"
+          },
+          "sport": {
+            "type": "string",
+            "example": "tennis",
+            "description": "Sport type"
+          },
+          "sport_id": {
+            "type": "string",
+            "example": "tennis",
+            "description": "Short sport designation"
+          },
+          "active": {
+            "type": "string",
+            "example": "tennis",
+            "description": "Event activity indicator"
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "tennis",
+            "description": "Time of last event change (score)"
+          },
+          "last_cf_at": {
+            "type": "string",
+            "example": "tennis",
+            "description": "Time of last odds change"
+          },
+          "swapped": {
+            "type": "string",
+            "example": "tennis",
+            "description": "Was team order reversed"
+          }
+        },
+        "example": {
+          "bk_event_id": "XBTTTDFE64657483",
+          "bk_event_native_id": "225864109",
+          "bk_name": "1xbet",
+          "bk_id": "XBT",
+          "sport_id": "TT",
+          "sport": "table-tennis",
+          "event_name": "Tatiana Yugan (Ukr) vs Tatiana Yaroshenko (Ukr)",
+          "team1": "Tatiana Yugan (Ukr)",
+          "team2": "Tatiana Yaroshenko (Ukr)",
+          "league_name": "Setka Cup. Women",
+          "direct_link": "https://1xstavka.ru/live/Table-Tennis/1734759-Setka-Cup-Women/225864109-Tatiana-Yugan-Tatiana-Yaroshenko",
+          "added_at": "1581918479",
+          "score": "2:0 (11:6 12:10 4:2) (0:0)",
+          "active": "1",
+          "updated_at": "1581920029",
+          "last_cf_at": "1581920029",
+          "event_id": "93134",
+          "swapped": "0"
+        }
+      },
+      "Market": {
+        "type": "object",
+        "required": [
+          "bet",
+          "cf",
+          "direct_link",
+          "blocked",
+          "meta",
+          "updated_at",
+          "updated_at_ms"
+        ],
+        "properties": {
+          "bet": {
+            "type": "string",
+            "description": "Bet name"
+          },
+          "cf": {
+            "type": "number",
+            "description": "Odds"
+          },
+          "direct_link": {
+            "type": "string",
+            "description": "Link to event"
+          },
+          "blocked": {
+            "type": "boolean",
+            "description": "Bet blocking indicator (bet unavailable at bookmaker itself)"
+          },
+          "meta": {
+            "type": "string",
+            "description": "JSON format. Meta-data for finding needed bet at bookmaker."
+          },
+          "updated_at": {
+            "type": "number",
+            "description": "Timestamp of last bet update"
+          },
+          "updated_at_ms": {
+            "type": "number",
+            "description": "Timestamp of last bet update in milliseconds"
+          }
+        },
+        "example": {
+          "bet": "WIN__P1",
+          "blocked": "0",
+          "cf": "1.02",
+          "direct_link": "",
+          "meta": "{\"group_name\":\"Main\",\"market_name\":\"Outcomes\",\"outcome_name\":\"1\",\"subevent_id\":31703982,\"market_type\":0,\"market_num\":120,\"factor_id\":921}",
+          "updated_at": "1573193575",
+          "updated_at_ms": "1573193575251"
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "URITokenAuth": {
+        "description": "User key is passed with all other parameters in\nQuery String. It can be found in Personal Account, after payment/connection\nof tariff.",
+        "type": "apiKey",
+        "in": "query",
+        "name": "token"
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Token is missing, expired or insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "MissingParameterError": {
+        "description": "Specified parameter is missing",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "URITokenAuth": []
+    }
+  ]
+}
